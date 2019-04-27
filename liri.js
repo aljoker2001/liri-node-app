@@ -5,8 +5,8 @@ const Spotify = require('node-spotify-api');
 const axios = require('axios');
 const keys = require("./keys.js");
 const spotify = new Spotify(keys.spotify);
-var movie = process.argv[3];
-const movieURL = `http://www.omdbapi.com/?t=${movie}&y=&plot=short&apikey=trilogy`;
+var entry = process.argv[3].replace(/ /g, "+");
+const movieURL = `http://www.omdbapi.com/?t=${entry}&y=&plot=short&apikey=trilogy`;
 
 switch (process.argv[2]) {
     case "concert-this":
@@ -18,16 +18,16 @@ switch (process.argv[2]) {
     case "movie-this":
         axios.get(movieURL).then(
             function (response) {
-                var IMDB = _.find(response.data, {"Source": "Internet Movie Database"});
-                console.log(IMDB);
+                var IMDB = _.find(response.data.Ratings, {Source: "Internet Movie Database"});
+                var rt = _.find(response.data.Ratings, {Source: "Rotten Tomatoes"});
                 console.log(`Title: ${response.data.Title}`);
                 console.log(`Release Date: ${response.data.Released}`);
-                console.log(`IMDB Rating: ${response.data.Rated}`);
-                console.log(`Rotten Tomatoes Rating: ${response.data.Title}`);
-                console.log(`Country where produced: ${response.data.Title}`);
-                console.log(`Language: ${response.data.Title}`);
-                console.log(`Plot: ${response.data.Title}`);
-                console.log(`Actors: ${response.data.Title}`);
+                console.log(`IMDB Rating: ${IMDB.Value}`);
+                console.log(`Rotten Tomatoes Rating: ${rt.Value}`);
+                console.log(`Country where produced: ${response.data.Country}`);
+                console.log(`Language: ${response.data.Language}`);
+                console.log(`Plot: ${response.data.Plot}`);
+                console.log(`Actors: ${response.data.Actors}`);
             },
 
             function (error) {
