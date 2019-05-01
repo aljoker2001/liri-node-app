@@ -14,10 +14,13 @@ String.prototype.replaceAt = function (index, replacement) {
     return this.substr(0, index) + replacement + this.substr(index + replacement.length);
 }
 
-if (process.argv[3] === undefined && process.argv[2] !== "do-what-it-says") {
+if (process.argv[3] === undefined && process.argv[2] === "concert-this") {
     console.log("Please enter a valid entry.")
     return;
-} else if (process.argv[2] !== "do-what-it-says") {
+} else if (process.argv[3] === undefined && process.argv[2] === "movie-this") {
+    console.log("Please enter a valid entry.")
+    return;
+} else if (process.argv[3]) {
     // This takes any input and capitalizes the first letter of each word
     for (i = 3; i < entries.length; i++) {
         entries[i] = entries[i].replaceAt(0, entries[i][0].toUpperCase());
@@ -29,8 +32,9 @@ if (process.argv[3] === undefined && process.argv[2] !== "do-what-it-says") {
         var entry = entryArr[0];
         var exchange = entry[0].toUpperCase();
         entry = entry.replaceAt(0, exchange);
-        console.log(entry);
     }
+} else if (process.argv[2] === "spotify-this-song") {
+    entry = "The Sign";
 }
 
 // This function displays the date, venue, and location of the concert
