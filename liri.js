@@ -6,6 +6,7 @@ const axios = require('axios');
 const keys = require("./keys.js");
 const fs = require('fs');
 const spotify = new Spotify(keys.spotify);
+const moment = require('moment');
 var entries = process.argv;
 var entryArr = [];
 // this function capitalizes the first letter of each word in the entries variable
@@ -30,6 +31,25 @@ if (process.argv[3] === undefined && process.argv[2] !== "do-what-it-says") {
         entry = entry.replaceAt(0, exchange);
         console.log(entry);
     }
+}
+
+// This function displays the date, venue, and location of the concert
+const concertThis = () => {
+    const bandURL = `https://rest.bandsintown.com/artists/${entry}/events?app_id=codingbootcamp`;
+    axios.get(bandURL).then(
+        function (response) {
+            var results = response.data;
+            for (i of results) {
+                var loc;
+                i.venue.region === "" ? loc = i.venue.country : loc = i.venue.region;
+                console.log("===============================")
+                console.log(`Date: ${moment(i.datetime).format('LLLL')}`);
+                console.log(`Venue: ${i.venue.name}`);
+                console.log(`Location: ${i.venue.city}, ${loc}`);
+                console.log("===============================")
+            }
+        }
+    )
 }
 
 const spotifySong = () => {
@@ -57,7 +77,7 @@ const makeFileEntry = () => {
             wordArr.push(words[i]);
         }
         entry = wordArr.join(" ");
-    // if the words array is only one word long, this will capitalize that word
+        // if the words array is only one word long, this will capitalize that word
     } else {
         entry = words[0];
         var exchange = entry[0].toUpperCase();
@@ -66,7 +86,7 @@ const makeFileEntry = () => {
     }
 }
 // var entry = process.argv[3].replace(/ /g, "+");
-const bandURL = ``;
+
 
 // This function pulls from the requested film from the OMDB API 
 const movieThis = () => {
@@ -107,7 +127,7 @@ const movieThis = () => {
 // This looks at the first entry following the js file and redirects to the appropriate function based on that entry
 switch (process.argv[2]) {
     case "concert-this":
-
+        concertThis();
         break;
     case "spotify-this-song":
         spotifySong();
@@ -133,7 +153,8 @@ switch (process.argv[2]) {
             }
             request = data.split(",");
             if (request[0] === "concert-this") {
-
+                makeFileEntry();
+                concertThis();
             } else if (request[0] === "spotify-this-song") {
                 makeFileEntry();
                 spotifySong();
