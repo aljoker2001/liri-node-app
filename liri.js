@@ -9,16 +9,19 @@ const spotify = new Spotify(keys.spotify);
 const moment = require('moment');
 var entries = process.argv;
 var entryArr = [];
+
 // this function capitalizes the first letter of each word in the entries variable
 String.prototype.replaceAt = function (index, replacement) {
     return this.substr(0, index) + replacement + this.substr(index + replacement.length);
 }
 
+// If the user does not enter a band, they are prompted to enter a band
 if (process.argv[3] === undefined && process.argv[2] === "concert-this") {
-    console.log("Please enter a valid entry.")
+    console.log("Please enter a valid band.")
     return;
+// If the user does not enter a movie, they are prompted to enter a movie
 } else if (process.argv[3] === undefined && process.argv[2] === "movie-this") {
-    console.log("Please enter a valid entry.")
+    console.log("Please enter a valid movie.")
     return;
 } else if (process.argv[3]) {
     // This takes any input and capitalizes the first letter of each word
@@ -37,36 +40,89 @@ if (process.argv[3] === undefined && process.argv[2] === "concert-this") {
     entry = "The Sign";
 }
 
+// This function logs the command and the date and time it was entered into the log.txt file
+const logCommand = () => {
+    fs.appendFile('log.txt', "\n" + moment().format('MMMM Do YYYY, h:mm:ss a') + " - " + process.argv + "\n", function (err) {
+        if (err) {
+            console.log(err);
+        } else {
+            console.log("Content Added!");
+        }
+    })
+}
+
 // This function displays the date, venue, and location of the concert
 const concertThis = () => {
     const bandURL = `https://rest.bandsintown.com/artists/${entry}/events?app_id=codingbootcamp`;
+    logCommand();
     axios.get(bandURL).then(
         function (response) {
             var results = response.data;
             for (i of results) {
                 var loc;
+                var event;
                 i.venue.region === "" ? loc = i.venue.country : loc = i.venue.region;
-                console.log("===============================")
-                console.log(`Date: ${moment(i.datetime).format('LLLL')}`);
-                console.log(`Venue: ${i.venue.name}`);
-                console.log(`Location: ${i.venue.city}, ${loc}`);
-                console.log("===============================")
+                event = `===============================
+Date: ${moment(i.datetime).format('LLLL')}
+Venue: ${i.venue.name}
+Location: ${i.venue.city}, ${loc}
+===============================`;
+                console.log(event);
+                fs.appendFile('log.txt', event, function (err) {
+                    // If an error was experienced we will log it.
+                    if (err) {
+                      console.log(err)
+                    }
+                  })
+                // console.log("===============================")
+                // console.log(`Date: ${moment(i.datetime).format('LLLL')}`);
+                // console.log(`Venue: ${i.venue.name}`);
+                // console.log(`Location: ${i.venue.city}, ${loc}`);
+                // console.log("===============================")
             }
+        },
+        function (error) {
+            if (error.response) {
+                // The request was made and the server responded with a status code
+                // that falls out of the range of 2xx
+                console.log(error.response.data)
+                console.log(error.response.status)
+                console.log(error.response.headers)
+            } else if (error.request) {
+                // The request was made but no response was received
+                // `error.request` is an object that comes back with details pertaining to the error that occurred.
+                console.log(error.request)
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                console.log('Error', error.message)
+            }
+            console.log(error.config)
         }
     )
 }
 
+// This uses the spotify API to pull details on a specific song entered by a user
 const spotifySong = () => {
+    logCommand();
     spotify.search({ type: 'track', query: entry }).then(function (response) {
         var trackDeets = _.find(response.tracks.items, { name: entry });
-        console.log(`Artist(s): ${trackDeets.artists[0].name}`);
-        console.log(`Song Name: ${trackDeets.name}`);
-        console.log(`Spotify Link: ${trackDeets.href}`);
-        console.log(`Album Name: ${trackDeets.album.name}`);
+        var song = `===============================
+Artist(s): ${trackDeets.artists[0].name}
+Song Name: ${trackDeets.name}
+Spotify Link: ${trackDeets.href}
+Album Name: ${trackDeets.album.name}
+===============================`;
+        console.log(song);
+        fs.appendFile('log.txt', song, function(err) {
+            if (err) {
+                console.log(err);
+            }
+        })
     }).catch(function (err) {
         console.log(err);
     });
 }
+
 // This formats the random.txt file to work with the existing functions and read the inputs appropriately to get results
 const makeFileEntry = () => {
     // removes quotations from entry
@@ -89,24 +145,31 @@ const makeFileEntry = () => {
         console.log(entry);
     }
 }
-// var entry = process.argv[3].replace(/ /g, "+");
-
 
 // This function pulls from the requested film from the OMDB API 
 const movieThis = () => {
     const movieURL = `http://www.omdbapi.com/?t=${entry}&y=&plot=short&apikey=trilogy`;
     axios.get(movieURL).then(
         function (response) {
+            logCommand();
             var IMDB = _.find(response.data.Ratings, { Source: "Internet Movie Database" });
             var rt = _.find(response.data.Ratings, { Source: "Rotten Tomatoes" });
-            console.log(`Title: ${response.data.Title}`);
-            console.log(`Release Date: ${response.data.Released}`);
-            console.log(`IMDB Rating: ${IMDB.Value}`);
-            console.log(`Rotten Tomatoes Rating: ${rt.Value}`);
-            console.log(`Country where produced: ${response.data.Country}`);
-            console.log(`Language: ${response.data.Language}`);
-            console.log(`Plot: ${response.data.Plot}`);
-            console.log(`Actors: ${response.data.Actors}`);
+            var movie = `===============================
+Title: ${response.data.Title}
+Release Date: ${response.data.Released}
+IMDB Rating: ${IMDB.Value}
+Rotten Tomatoes Rating: ${rt.Value}
+Country where produced: ${response.data.Country}
+Language: ${response.data.Language}
+Plot: ${response.data.Plot}
+Actors: ${response.data.Actors}
+===============================`;
+            console.log(movie);
+            fs.appendFile('log.txt', movie, function(err) {
+                if (err) {
+                    console.log(err);
+                }
+            })
         },
         function (error) {
             if (error.response) {
@@ -135,16 +198,6 @@ switch (process.argv[2]) {
         break;
     case "spotify-this-song":
         spotifySong();
-
-        //     * Artist(s)
-
-        //     * The song's name
-
-        //     * A preview link of the song from Spotify
-
-        //     * The album that the song is from
-
-        //   * If no song is provided then your program will default to "The Sign" by Ace of Base.
         break;
     // If the user enters "movie-this", this case will pull the relevant details from the subsequent movie title from the OMDB API
     case "movie-this":
